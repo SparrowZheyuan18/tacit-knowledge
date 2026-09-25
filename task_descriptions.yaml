@@ -1,0 +1,48 @@
+# Short competition descriptions given to the model (data, target, metric). Keys = TraceML comp ids.
+amex-default-prediction: |
+  American Express Default Prediction (Kaggle, 2022). Predict the probability that a credit-card customer
+  defaults, from up to 13 monthly statements per customer (~190 anonymised numeric/categorical features
+  in groups D_ delinquency, S_ spend, P_ payment, B_ balance, R_ risk). ~459k customers in train, ~925k in
+  test; one prediction per customer. Metric M = 0.5 * (normalised Gini + default rate captured at the top 4%
+  of predictions), higher is better. The raw CSV is 16 GB, so most notebooks use compressed feather/parquet
+  versions and aggregate the monthly rows per customer (last / mean / std / diff features) before GBDT.
+commonlitreadabilityprize: |
+  CommonLit Readability Prize (Kaggle, 2021). Predict a continuous readability score (target, roughly -4 to 2,
+  with a per-row standard_error) for 2,834 short literary/informational text excerpts. Metric RMSE, lower is
+  better. The public leaderboard uses only ~7 rows, the private set ~2,000. Small, noisy data: solutions are
+  fine-tuned transformers (RoBERTa/DeBERTa/ELECTRA) with careful CV, layer-wise learning rates, frequent
+  validation during an epoch, and ensembling of seeds/folds/backbones.
+equity-post-hct-survival-predictions: |
+  CIBMTR - Equity in post-HCT Survival Predictions (Kaggle, 2024-25). Predict a risk score for survival after
+  allogeneic hematopoietic cell transplantation from ~28.8k patients with 57 clinical/demographic features
+  (including race_group). Targets: efs (event indicator) and efs_time. Metric: stratified concordance index =
+  mean of the C-index within each race group minus its standard deviation across groups, higher is better,
+  so both accuracy and equal performance across race groups matter. Typical solutions transform the survival
+  target (Kaplan-Meier, Nelson-Aalen, Cox partial hazard) and regress it with GBDTs / NNs, then ensemble.
+google-quest-challenge: |
+  Google QUEST Q&A Labeling (Kaggle, 2019-20). For 6,079 StackExchange question-answer pairs (question_title,
+  question_body, answer, plus category/host), predict 30 continuous quality labels (e.g. question_asker_intent
+  _understanding, answer_helpful) that are averages of crowd ratings and take a few discrete values. Metric:
+  mean Spearman correlation over the 30 columns, higher is better. Solutions fine-tune BERT-family models on
+  question and answer text, and post-process predictions (rounding to the discrete levels) because Spearman
+  depends on ranks.
+hms-harmful-brain-activity-classification: |
+  HMS - Harmful Brain Activity Classification (Kaggle, 2024). Classify 50-second EEG segments (also given
+  10-minute spectrograms) into six classes (seizure, LPD, GPD, LRDA, GRDA, other) as a probability
+  distribution. Labels are vote counts from 1-28 experts; ~106k labelled windows from ~17k EEG recordings and
+  ~1,950 patients. Metric: KL divergence between predicted and expert vote distributions, lower is better.
+  Strong solutions use CNNs (EfficientNet etc.) on Kaggle and self-generated spectrograms, 1D CNNs on raw EEG,
+  group K-fold by patient, and two-stage training that fine-tunes on high-vote-count (>=10 votes) samples.
+learning-agency-lab-automated-essay-scoring-2: |
+  Learning Agency Lab - Automated Essay Scoring 2.0 (Kaggle, 2024). Score 17,307 student essays on a 1-6 scale.
+  Metric: quadratic weighted kappa, higher is better. Part of the training set comes from the Persuade corpus
+  with a different score distribution from the rest, and the test set resembles the non-Persuade part.
+  Solutions fine-tune DeBERTa as a regressor with per-threshold rounding optimised for QWK, and/or LightGBM
+  on TF-IDF and hand-crafted text features, often blending both.
+ranzcr-clip-catheter-line-classification: |
+  RANZCR CLiP - Catheter and Line Position Challenge (Kaggle, 2021). Chest X-rays (~30k train, 3.5k+ test);
+  11 binary labels describing whether endotracheal tubes, nasogastric tubes, central venous catheters are
+  normal / borderline / abnormal, plus Swan-Ganz catheter presence. Metric: macro-averaged AUC over the 11
+  labels, higher is better. Line-segment annotations exist for a subset of train images
+  (train_annotations.csv); strong solutions train segmentation-guided or multi-stage CNNs (EfficientNet,
+  ResNet200d) at high resolution, with heavy augmentation and TTA.

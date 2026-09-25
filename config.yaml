@@ -1,26 +1,20 @@
-# Non-secret settings for the TraceML breakpoint experiments.
-# The API key lives in .env (LITELLM_API_KEY), never here.
-
 litellm:
-  api_base: "https://ai-gateway.andrew.cmu.edu/"
-  # Proxy exposes OpenAI-compatible routes, so every model is addressed as "openai/<name>".
-  prefix: "openai/"
+  api_base: https://ai-gateway.andrew.cmu.edu/
+  prefix: openai/
   available_models:
-    - wine-claude-opus-4-6
-    - wine-claude-sonnet-4-6
-    - wine-claude-opus-4-5
-    - wine-claude-sonnet-4-5
-    - wine-claude-haiku-4-5
-
+  - wine-claude-opus-4-6
+  - wine-claude-sonnet-4-6
+  - wine-claude-opus-4-5
+  - wine-claude-sonnet-4-5
+  - wine-claude-haiku-4-5
 model:
-  generator: wine-claude-opus-4-6      # proposes the next edit at a breakpoint
-  judge: wine-claude-sonnet-4-6        # judges / annotates
+  generator: wine-claude-opus-4-6
+  judge: wine-claude-sonnet-4-6
   max_tokens: 2000
   temperature: 0.7
   n_samples: 1
   timeout_s: 120
   max_retries: 3
-
 paths:
   data_root: data/TraceML
   action_parquet: data/TraceML/data/{split}/action.parquet
@@ -29,13 +23,41 @@ paths:
   competitions: data/TraceML/manifests/competitions.json
   task_desc_dir: task_descriptions
   work_dir: results
-  split: paired                        # paired | humans_only | experiment_run
-
+  split: paired
 context:
-  history_code: diffs        # diffs | full | none
+  history_code: diffs
   history_reasoning: true
-  history_max_chars: 80000
-  diff_max_lines: 400
-  code_max_chars: 40000
+  history_max_chars: 30000
+  diff_max_lines: 300
+  code_max_chars: 8000
   hide_scores: false
-  hint: ""
+  hint: ''
+selection:
+  top_k: 10
+  min_transitions: 5
+  min_scored: 3
+  min_source_frac: 0.9
+  max_key_steps_per_trajectory: 30
+rationale:
+  models:
+  - wine-claude-sonnet-4-5
+  - wine-claude-opus-4-5
+  consensus_model: wine-claude-haiku-4-5
+  temperature: 0.7
+  workers: 12
+  note: one sample per model; sonnet-4-6 was used for the first 251 steps before its
+    daily quota ran out
+tk:
+  model: wine-claude-sonnet-4-6
+  match_model: wine-claude-sonnet-4-6
+  batch_size: 15
+  merge_chunk: 40
+  step_types:
+  - deliberate
+  - exploratory
+  min_confidence: 1
+  seed: 0
+  min_support: 2
+  workers: 8
+  note: opus-4-6 did evolve batches 1-12 and the bottom-up extraction + first 8 merge
+    rounds before its daily quota ran out; sonnet-4-6 did the rest

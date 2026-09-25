@@ -95,3 +95,25 @@ if __name__ == "__main__":
     t0 = time.time()
     out = call_model("You are a helpful assistant.", a.prompt, model=a.model, max_tokens=50, temperature=0)
     print(f"[{a.model or CFG['model']['generator']}, {time.time()-t0:.1f}s] {out}")
+
+
+# ----------------------------------------------------------------------------------------------- batch helper
+def pmap_jsonl(items, fn, path, key=lambda r: r["step_id"], workers=8, desc="", overwrite=False):
+    """Run fn(item) -> dict in a thread pool and append each result as one JSON line to `path`.
+    Items whose key is already present in the file are skipped, so a run can be resumed. Returns all records."""
+    import concurrent.futures as cf
+    path = Path(path)
+    done = {}
+    if path.exists() and not overwrite:
+        for l in open(path, encoding="utf-8"):
+            r = json.loads(l); done[key(r)] = r
+    todo = [it for it in items if key(it) not in done]
+    print(f"{desc}: {len(done)} done, {len(todo)} to run, {workers} workers", flush=True)
+    t0 = time.time()
+    with cf.ThreadPoolExecutor(workers) as ex, open(path, "w" if overwrite else "a", encoding="utf-8") as f:
+        for i, rec in enumerate(ex.map(fn, todo), 1):
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n"); f.flush()
+            done[key(rec)] = rec
+            if i % 20 == 0 or i == len(todo):
+                print(f"  {i}/{len(todo)}  {time.time()-t0:.0f}s", flush=True)
+    return [done[key(it)] for it in items if key(it) in done]

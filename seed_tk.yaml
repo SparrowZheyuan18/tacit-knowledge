@@ -1,0 +1,41 @@
+# Seed tacit-knowledge list (from the Colab notebook). Each item is a conditional: in `context`, do `action`.
+- id: TK01
+  name: validation_probing
+  context: The notebook uses a default split (random or stratified K-fold), and the data has a visible grouping or ordering structure (an entity id repeated across rows, a timestamp, a source/site column) that the split does not respect.
+  action: If test rows come from unseen groups or later time, rebuild the split to mirror that (GroupKFold on the entity, time-based holdout); else keep the default split. Treat the CV scheme as a hypothesis about how test differs from train, not as a fixed setting.
+- id: TK02
+  name: cv_lb_gap_diagnosis
+  context: Over several submissions, local CV and public LB move in different directions, or the CV-LB gap is far larger than the differences between models.
+  action: If the gap persists over 2-3 submissions, stop tuning models and look for the cause in the split or a leaking feature; else treat a single LB move as noise and keep trusting CV.
+- id: TK03
+  name: leak_artifacts
+  context: "A feature has implausibly high importance or predictive power, and it looks like an artifact: an id that increases with time, a row index, file order, float precision or missingness patterns that differ between train and test."
+  action: If the strongest signal comes from such an artifact, treat the CV score as leaked and remove the feature before doing anything else; else proceed with feature work on the real signal.
+- id: TK04
+  name: adversarial_shift_check
+  context: Train and test may not come from the same distribution (different time range, different sources), and a train-vs-test classifier can be built.
+  action: If a classifier separates train from test well above chance, find the drifting features and drop, coarsen, or reweight them before tuning; else assume i.i.d. and spend effort on model capacity.
+- id: TK05
+  name: metric_aligned_objective
+  context: The competition metric is not the training loss and behaves differently from it (a thresholded metric like F1 or QWK, a ranking metric like MAP@K, an asymmetric or weighted custom score) and the model is trained on plain logloss or MSE.
+  action: If the metric can be directly optimized in post-processing (thresholds, cut points, per-group rank normalization), fit that step on out-of-fold predictions; if not, change the loss or the early-stopping criterion to a surrogate of the metric; else train on the default loss.
+- id: TK06
+  name: ensemble_orthogonality
+  context: An ensemble is being built and the candidate models are variants of the same family on the same features (many seeds or parameter settings of one GBDT).
+  action: If the models' errors are highly correlated, add a model with a different representation (a neural net on raw sequences, a linear model on interactions, a GBDT on aggregates) rather than another variant, and set weights by out-of-fold prediction covariance; else simple averaging of variants is fine.
+- id: TK07
+  name: residual_guided_features
+  context: The model has plateaued and the remaining gains from importance-ranked feature engineering are small.
+  action: If the plateau persists, inspect the rows where out-of-fold error is largest and derive features from what those rows share (an interaction, an edge case, a subgroup); else continue with importance-guided feature work.
+- id: TK08
+  name: capacity_suppression
+  context: "The signal-to-noise ratio is low: small data, weak or noisy labels, per-fold scores vary widely, and hyperparameter search keeps finding new 'best' settings on validation."
+  action: If the improvements being chased are smaller than the fold-to-fold spread, reduce capacity (shallower trees, more regularization, more subsampling) and prefer stable settings over the single best CV run; else let capacity and tuning run.
+- id: TK09
+  name: lb_noise_floor
+  context: The public LB is computed on a small fraction of the test set, so a change smaller than its sampling noise is uninformative.
+  action: If a change moves the LB by less than that noise, do not keep or revert on that basis and stop micro-tuning weights; else treat the move as evidence.
+- id: TK10
+  name: late_stage_allocation
+  context: Little competition time or compute remains and the current model is already competitive.
+  action: If the budget is nearly exhausted, stop adding new architectures or features and spend the remainder on seed averaging, fold ensembling, and pseudo-labeling; else structurally new ideas are still worth trying.
