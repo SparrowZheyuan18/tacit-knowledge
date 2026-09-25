@@ -1,0 +1,41 @@
+# Non-secret settings for the TraceML breakpoint experiments.
+# The API key lives in .env (LITELLM_API_KEY), never here.
+
+litellm:
+  api_base: "https://ai-gateway.andrew.cmu.edu/"
+  # Proxy exposes OpenAI-compatible routes, so every model is addressed as "openai/<name>".
+  prefix: "openai/"
+  available_models:
+    - wine-claude-opus-4-6
+    - wine-claude-sonnet-4-6
+    - wine-claude-opus-4-5
+    - wine-claude-sonnet-4-5
+    - wine-claude-haiku-4-5
+
+model:
+  generator: wine-claude-opus-4-6      # proposes the next edit at a breakpoint
+  judge: wine-claude-sonnet-4-6        # judges / annotates
+  max_tokens: 2000
+  temperature: 0.7
+  n_samples: 1
+  timeout_s: 120
+  max_retries: 3
+
+paths:
+  data_root: data/TraceML
+  action_parquet: data/TraceML/data/{split}/action.parquet
+  state_parquet: data/TraceML/data/{split}/state.parquet
+  notebook_dir: data/TraceML/trajectories_human
+  competitions: data/TraceML/manifests/competitions.json
+  task_desc_dir: task_descriptions
+  work_dir: results
+  split: paired                        # paired | humans_only | experiment_run
+
+context:
+  history_code: diffs        # diffs | full | none
+  history_reasoning: true
+  history_max_chars: 80000
+  diff_max_lines: 400
+  code_max_chars: 40000
+  hide_scores: false
+  hint: ""
